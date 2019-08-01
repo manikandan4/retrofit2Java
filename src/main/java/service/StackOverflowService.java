@@ -2,7 +2,12 @@ package service;
 
 import Interfaces.APIInterface;
 import Interfaces.StackOverflowInterface;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import model.Search;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,7 +33,7 @@ public class StackOverflowService implements APIInterface {
 
     public Search getSearchOutput(Map<String, String> options) throws IOException {
         Call<Search> listCall = stackService.listSearch(options);
-        Search returnObj = null;
+
         //Async call
         /*listCall.enqueue(new Callback<Search>() {
             @Override
@@ -44,11 +49,29 @@ public class StackOverflowService implements APIInterface {
         });*/
 
         Response<Search> response = listCall.execute();
-
         if (!response.isSuccessful()) {
             throw new IOException(response.errorBody() != null
                     ? response.errorBody().string() : "Unknown error");
         }
         return response.body();
+    }
+
+
+    public void SearchStackOverflow(Map<String, String> options) throws IOException {
+        Call<ResponseBody> responseBodyCall = stackService.SearchStackOverflow(options);
+        Response<ResponseBody> execute = responseBodyCall.execute();
+
+        System.out.println(toPrettyFormat(execute.body().string()));
+    }
+
+    public static String toPrettyFormat(String jsonString)
+    {
+        JsonParser parser = new JsonParser();
+        JsonObject json = parser.parse(jsonString).getAsJsonObject();
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String prettyJson = gson.toJson(json);
+
+        return prettyJson;
     }
 }
